@@ -130,16 +130,29 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
         print("pas de réponse a un user ni de tag d'user")
         return texte
 
+
 def remove_emoji(fichier_emoticone, texte):
+    pas_emoticon = ""
+    compteur_emote = 0
     with open(fichier_emoticone, "r") as fichier_emoticone:
         fichier_emoticone_to_rawtext = fichier_emoticone.read()
         all_emoticone = fichier_emoticone_to_rawtext.split("\n")
-        for i in range(len(all_emoticone)):
-            no_emoticon = texte.replace(all_emoticone[i], " ")
-        print("remove emoji: " , no_emoticon)
-        return no_emoticon
+        for y in range(len(all_emoticone)):
+            if all_emoticone[y] in texte:
+                print("emote trouvée", all_emoticone[y])
+                compteur_emote += 1
+                if pas_emoticon == "":
+                    pas_emoticon = texte.replace(all_emoticone[y], ' ')
+                else:
+                    pas_emoticon = pas_emoticon.replace(all_emoticone[y], ' ')
+        if compteur_emote == 0 :
+            print("pas d'emote :", texte)
+            return texte
+        else :
+            print("remove emoji: ", pas_emoticon)
+            return pas_emoticon
 
-
+# pas utile pour le moment
 def remove_symbols(texte):
 
     nbr_symbol = len(json_load['entities']['symbols'])
@@ -165,10 +178,10 @@ def remove_punctuation(texte):
 
 def nettoyer_le_texte(language, texte): # regroupement de toutes les fonctions pour nettoyer le texte
     no_url = remove_url(texte)
-    remove_username = remove_username_twitter(no_url)
+    no_emoji = remove_emoji(fichier_emoticone, no_url)
+    remove_username = remove_username_twitter(no_emoji)
     no_punctuation = remove_punctuation(remove_username)
-    no_emoji = remove_emoji(fichier_emoticone, no_punctuation)
-    texte_tokenize = tokenizer.tokenize(no_emoji)
+    texte_tokenize = tokenizer.tokenize(no_punctuation)
     print("tokenisation : ", texte_tokenize)
     words_stopped = remove_stopswords(language, texte_tokenize)
     texte_stemmatiser = stemmatisation(language, words_stopped)
