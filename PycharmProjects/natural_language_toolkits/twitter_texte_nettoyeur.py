@@ -52,8 +52,12 @@ def stemmatisation(language, texte):
 
 def remove_url(texte):
     resultat = re.sub(r"http\S+", "", texte)
-    print("remove url:", resultat)
-    return resultat
+    if resultat == texte:
+        print("pas d'url detéctée")
+        return texte
+    else:
+        print("remove url:", resultat)
+        return resultat
 
 def remove_username_twitter(texte): # enléve les user mention et les username d'un tweet
     texte_sans_username = ""
