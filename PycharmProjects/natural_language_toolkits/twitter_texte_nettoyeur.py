@@ -84,15 +84,15 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
     try:
         texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'extended_tweet', 'entities', 'user_mentions')
     except KeyError:
-        print("...")
+        result = "pas de user mention pour la structure json ci-dessus"
     try:
         texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status', 'entities', 'user_mentions')
     except KeyError:
-        print("...")
+        result = "pas de user mention pour la structure json ci-dessus"
     try:
         texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'entities', 'user_mentions', None)
     except KeyError:
-        print("...")
+        result = "pas de user mention pour la structure json ci-dessus"
 
     def all_username_path(texte_sans_username, texte_sans_user_mention, structurejson1, structurejson2,structurejson3 ):
         if structurejson3 == None and structurejson2 == None:
@@ -122,13 +122,15 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
         texte_sans_username = all_username_path(texte_sans_username,texte_sans_user_mention,'retweeted_status', 'user','screen_name')
         return texte_sans_username
     except KeyError:
-        print("...")
+        result = "pas de user mention pour la structure json ci-dessus"
     try:
         texte_sans_username = all_username_path(texte_sans_username,texte_sans_user_mention,'in_reply_to_screen_name', None, None)
         return texte_sans_username
     except TypeError:
-        print("pas de réponse a un user ni de tag d'user")
-        return texte
+        if texte_sans_user_mention == "":
+            return texte
+        else:
+            return texte_sans_user_mention
 
 
 def remove_emoji(fichier_emoticone, texte):
@@ -146,7 +148,7 @@ def remove_emoji(fichier_emoticone, texte):
                 else:
                     pas_emoticon = pas_emoticon.replace(all_emoticone[y], ' ')
         if compteur_emote == 0 :
-            print("pas d'emote :", texte)
+            print("pas d'emote détéctée.")
             return texte
         else :
             print("remove emoji: ", pas_emoticon)
@@ -180,6 +182,10 @@ def nettoyer_le_texte(language, texte): # regroupement de toutes les fonctions p
     no_url = remove_url(texte)
     no_emoji = remove_emoji(fichier_emoticone, no_url)
     remove_username = remove_username_twitter(no_emoji)
+    if remove_username == no_emoji:
+        print("pas de username détécté.")
+    else:
+        print("remove username :", remove_username)
     no_punctuation = remove_punctuation(remove_username)
     texte_tokenize = tokenizer.tokenize(no_punctuation)
     print("tokenisation : ", texte_tokenize)
