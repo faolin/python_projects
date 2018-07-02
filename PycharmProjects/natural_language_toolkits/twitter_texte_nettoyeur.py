@@ -63,13 +63,17 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
     texte_sans_username = ""
     texte_sans_user_mention = ""
 
-    def all_user_mention_path(texte_sans_user_mention, structurejson1, structurejson2, structurejson3):
-        if structurejson3 == None :
+    def all_user_mention_path(texte_sans_user_mention, structurejson1, structurejson2, structurejson3, structurejson4):
+        if structurejson3 == None and structurejson4 == None:
             nbr_user_mention = len(json_load[structurejson1][structurejson2])
             struct_user_mention = json_load[structurejson1][structurejson2]
-        else:
+        if structurejson4 == None and structurejson3 != None:
             nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3])
             struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
+        if structurejson1 != None and structurejson2 != None and structurejson3!= None and structurejson4 != None:
+            nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3][structurejson4])
+            struct_user_mention = json_load[structurejson1][structurejson2][structurejson3][structurejson4]
+
         for i in range(nbr_user_mention):
             user_mention = "@" + struct_user_mention[i]['screen_name']
             if texte_sans_user_mention == "":
@@ -86,15 +90,27 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
         return texte_sans_user_mention
 
     try:
-        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'extended_tweet', 'entities', 'user_mentions')
+        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'quoted_status', 'extended_tweet', 'entities', 'user_mentions')
     except KeyError:
         result = "pas de user mention pour la structure json ci-dessus"
     try:
-        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status', 'entities', 'user_mentions')
+        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'quoted_status', 'entities', 'user_mentions', None)
     except KeyError:
         result = "pas de user mention pour la structure json ci-dessus"
     try:
-        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'entities', 'user_mentions', None)
+        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'extended_tweet', 'entities', 'user_mentions', None)
+    except KeyError:
+        result = "pas de user mention pour la structure json ci-dessus"
+    try:
+        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status','extended_tweet', 'entities','user_mentions')
+    except KeyError:
+        result = "pas de user mention pour la structure json ci-dessus"
+    try:
+        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status', 'entities', 'user_mentions', None)
+    except KeyError:
+        result = "pas de user mention pour la structure json ci-dessus"
+    try:
+        texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'entities', 'user_mentions', None, None)
     except KeyError:
         result = "pas de user mention pour la structure json ci-dessus"
 
@@ -136,7 +152,48 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
         else:
             return texte_sans_user_mention
 
+#en cours
+def remove_hashtags(texte):
+    texte_sans_hashtags = " "
+    def all_hashtags_path(texte_sans_hashtags, structurejson1, structurejson2, structurejson3):
+        if structurejson3 == None :
+            nbr_user_mention = len(json_load[structurejson1][structurejson2])
+            struct_user_mention = json_load[structurejson1][structurejson2]
+        else:
+            nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3])
+            struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
+        for i in range(nbr_user_mention):
+            user_mention = "@" + struct_user_mention[i]
+            if texte_sans_hashtags == "":
+                elem2 = [x for x in texte.split()]
+            else:
+                elem2 = [x for x in texte_sans_hashtags.split()]
+            for item in elem2:
+                index = item.find(user_mention)
+                if index != -1:
+                    if texte_sans_hashtags == "":
+                        texte_sans_hashtags = texte.replace(item, "")
+                    else:
+                        texte_sans_hashtags = texte_sans_hashtags.replace(item, "")
+        return texte_sans_hashtags
 
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'extended_tweet', 'entities', 'hashtags')
+        return texte_sans_hashtags
+    except KeyError:
+        result = "pas de user mention pour la structure json ci-dessus"
+
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'entities', 'hashtags')
+        return texte_sans_hashtags
+    except KeyError:
+        result = "pas de user mention pour la structure json ci-dessus"
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'entities', 'hashtags', None)
+        return texte_sans_hashtags
+    except TypeError:
+        return texte
+        result = "pas de user mention pour la structure json ci-dessus"
 def remove_emoji(fichier_emoticone, texte):
     pas_emoticon = ""
     compteur_emote = 0
@@ -173,18 +230,13 @@ def remove_punctuation(texte):
     no_punctuation = no_punctuation.replace('«',' ')
     no_punctuation = no_punctuation.replace('»',' ')
     no_punctuation = no_punctuation.replace('➡', ' ')
-    # supprime t'on les émoticones ou on les remplaces toutes par "emoticone" afin d'étudier leur impact???
-    '''
-    no_punctuation = no_punctuation.replace('来', ' ')
-    no_punctuation = no_punctuation.replace('自', ' ')
-    no_punctuation = no_punctuation.replace('☎', ' ')
-    no_punctuation = no_punctuation.replace('🌝', ' ')'''
     print("remove punctuation: ", no_punctuation)
     return no_punctuation
 
 def nettoyer_le_texte(language, texte): # regroupement de toutes les fonctions pour nettoyer le texte
     no_url = remove_url(texte)
     no_emoji = remove_emoji(fichier_emoticone, no_url)
+    #no_hashtags = remove_hashtags(no_emoji)
     remove_username = remove_username_twitter(no_emoji)
     if remove_username == no_emoji:
         print("pas de username détécté.")
