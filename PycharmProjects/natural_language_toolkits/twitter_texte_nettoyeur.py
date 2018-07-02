@@ -154,22 +154,27 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
 
 #en cours
 def remove_hashtags(texte):
-    texte_sans_hashtags = " "
-    def all_hashtags_path(texte_sans_hashtags, structurejson1, structurejson2, structurejson3):
-        if structurejson3 == None :
-            nbr_user_mention = len(json_load[structurejson1][structurejson2])
-            struct_user_mention = json_load[structurejson1][structurejson2]
-        else:
-            nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3])
-            struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
-        for i in range(nbr_user_mention):
-            user_mention = "@" + struct_user_mention[i]
+    texte_sans_hashtags = ""
+
+    def all_hashtags_path(texte_sans_hashtags, structurejson1, structurejson2, structurejson3, structurejson4):
+        if structurejson3 == None and structurejson4 == None:
+            nbr_hashtages = len(json_load[structurejson1][structurejson2])
+            struct_hashtags = json_load[structurejson1][structurejson2]
+        if structurejson4 == None and structurejson3 != None:
+            nbr_hashtages = len(json_load[structurejson1][structurejson2][structurejson3])
+            struct_hashtags = json_load[structurejson1][structurejson2][structurejson3]
+        if structurejson1 != None and structurejson2 != None and structurejson3 != None and structurejson4 != None:
+            nbr_hashtages = len(json_load[structurejson1][structurejson2][structurejson3][structurejson4])
+            struct_hashtags = json_load[structurejson1][structurejson2][structurejson3][structurejson4]
+
+        for i in range(nbr_hashtages):
+            hashtags = "#" + struct_hashtags[i]['text']
             if texte_sans_hashtags == "":
                 elem2 = [x for x in texte.split()]
             else:
                 elem2 = [x for x in texte_sans_hashtags.split()]
             for item in elem2:
-                index = item.find(user_mention)
+                index = item.find(hashtags)
                 if index != -1:
                     if texte_sans_hashtags == "":
                         texte_sans_hashtags = texte.replace(item, "")
@@ -178,22 +183,35 @@ def remove_hashtags(texte):
         return texte_sans_hashtags
 
     try:
-        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'extended_tweet', 'entities', 'hashtags')
-        return texte_sans_hashtags
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'quoted_status', 'extended_tweet', 'entities', 'hashtags')
     except KeyError:
-        result = "pas de user mention pour la structure json ci-dessus"
+        result = "pas de hashtags pour la structure json ci-dessus"
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'quoted_status', 'entities', 'hashtags', None)
+    except KeyError:
+        result = "pas de hashtags pour la structure json ci-dessus"
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'extended_tweet', 'entities', 'hashtags', None)
+    except KeyError:
+        result = "pas de hashtags pour la structure json ci-dessus"
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'extended_tweet', 'entities', 'hashtags')
+    except KeyError:
+        result = "pas de hashtags pour la structure json ci-dessus"
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'entities', 'hashtags', None)
+    except KeyError:
+        result = "pas de hashtags pour la structure json ci-dessus"
+    try:
+        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'entities', 'hashtags', None, None)
+    except KeyError:
+        result = "pas de hashtags pour la structure json ci-dessus"
 
-    try:
-        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'entities', 'hashtags')
-        return texte_sans_hashtags
-    except KeyError:
-        result = "pas de user mention pour la structure json ci-dessus"
-    try:
-        texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'entities', 'hashtags', None)
-        return texte_sans_hashtags
-    except TypeError:
+    if texte_sans_hashtags == "":
         return texte
-        result = "pas de user mention pour la structure json ci-dessus"
+    else:
+        return texte_sans_hashtags
+
 def remove_emoji(fichier_emoticone, texte):
     pas_emoticon = ""
     compteur_emote = 0
@@ -230,15 +248,22 @@ def remove_punctuation(texte):
     no_punctuation = no_punctuation.replace('«',' ')
     no_punctuation = no_punctuation.replace('»',' ')
     no_punctuation = no_punctuation.replace('➡', ' ')
+    no_punctuation = no_punctuation.replace('•', ' ')
+    no_punctuation = no_punctuation.replace('°', ' ')
+
     print("remove punctuation: ", no_punctuation)
     return no_punctuation
 
 def nettoyer_le_texte(language, texte): # regroupement de toutes les fonctions pour nettoyer le texte
     no_url = remove_url(texte)
     no_emoji = remove_emoji(fichier_emoticone, no_url)
-    #no_hashtags = remove_hashtags(no_emoji)
-    remove_username = remove_username_twitter(no_emoji)
-    if remove_username == no_emoji:
+    no_hashtags = remove_hashtags(no_emoji)
+    if no_hashtags == no_emoji:
+        print("pas de hashtags détécté")
+    else:
+        print("remove hashtags : ", no_hashtags)
+    remove_username = remove_username_twitter(no_hashtags)
+    if remove_username == no_hashtags:
         print("pas de username détécté.")
     else:
         print("remove username :", remove_username)
