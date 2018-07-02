@@ -81,12 +81,14 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
             else:
                 elem2 = [x for x in texte_sans_user_mention.split()]
             for item in elem2:
-                index = item.find(user_mention)
+                index = item.lower().find(user_mention.lower())
                 if index != -1:
                     if texte_sans_user_mention == "":
                         texte_sans_user_mention = texte.replace(item, "")
+                        texte_sans_user_mention = texte_sans_user_mention.replace(item.lower(), "")
                     else:
                         texte_sans_user_mention = texte_sans_user_mention.replace(item, "")
+                        texte_sans_user_mention = texte_sans_user_mention.replace(item.lower(), "")
         return texte_sans_user_mention
 
     try:
@@ -125,12 +127,14 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
         else:
             elem3 = [x for x in texte_sans_user_mention.split()]
         for item in elem3:
-            index = item.find(user_mention)
+            index = item.lower().find(user_mention.lower())
             if index != -1:
                 if texte_sans_user_mention == "":
                     texte_sans_username = texte.replace(item, "")
+                    texte_sans_username = texte_sans_username.replace(item.lower(), "")
                 else:
                     texte_sans_username = texte_sans_user_mention.replace(item, "")
+                    texte_sans_username = texte_sans_username.replace(item.lower(), "")
             else:
                 if texte_sans_user_mention == "":
                     texte_sans_username = texte
