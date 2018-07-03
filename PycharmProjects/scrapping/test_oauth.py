@@ -1,8 +1,8 @@
 import urllib.parse
 import oauth2 as oauth
 
-consumer_key = '78rytq04hrg4ee'
-consumer_secret = 'r6r2h4k0W4zk212q'
+consumer_key = '********'
+consumer_secret = '********'
 
 request_token_url = 'https://api.linkedin.com/uas/oauth/requestToken'
 access_token_url = 'https://api.linkedin.com/uas/oauth/accessToken'
