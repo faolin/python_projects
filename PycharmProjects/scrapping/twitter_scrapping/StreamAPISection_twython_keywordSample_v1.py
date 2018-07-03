@@ -17,10 +17,10 @@ import datetime as dt
 
 # Key, secret, token, token_secret for one of my developer accounts.
 # Update with your own strings as necessary
-APP_KEY = 'z5JSjzaSSBOD7L6s4oRjbiWmC'
-APP_SECRET = 'FTIxEDX7fLUOPzPCT3ntd2t2L2QIKgIEsstNSTqVoAwaVjZbAL'
-OAUTH_TOKEN = '1348855934-IkHdBwiLkhcyFoxHY65Nk8J66BqoGC1bdQabxnO'
-OAUTH_TOKEN_SECRET = '7FWRIksqVP4xFN5XfxygtAndXpUceCdKSvHERhY2S3iCl'
+APP_KEY = '******'
+APP_SECRET = '*******'
+OAUTH_TOKEN = '********'
+OAUTH_TOKEN_SECRET = '*******'
 
 # Make class
 class MyStreamer(twy.TwythonStreamer):
