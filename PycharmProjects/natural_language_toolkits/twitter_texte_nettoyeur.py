@@ -156,7 +156,6 @@ def remove_username_twitter(texte): # enléve les user mention et les username d
         else:
             return texte_sans_user_mention
 
-#en cours
 def remove_hashtags(texte):
     texte_sans_hashtags = ""
 
