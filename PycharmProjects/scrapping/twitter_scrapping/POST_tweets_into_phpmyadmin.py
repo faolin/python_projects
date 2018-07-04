@@ -26,34 +26,37 @@ class MyStreamer(twy.TwythonStreamer):
 
         def get_text_and_post(data_dump, json_load, structurejson1 , sctructurejson2 , structurejson3):
             if structurejson3 != None:
+                tweet_quoted_texte = json_load[structurejson1][sctructurejson2][structurejson3]
+                # print(tweet_quoted_texte)
+                data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
+                r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                print(r.status_code, r.reason)
+
+            if structurejson3 == None and sctructurejson2 != None:
+                tweet_quoted_texte = json_load[structurejson1][sctructurejson2]
+                # print(tweet_quoted_texte)
+                data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
+                r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                print(r.status_code, r.reason)
+
+            if structurejson3 == None and sctructurejson2 == None:
+                tweet_quoted_texte = json_load[structurejson1]
+                # print(tweet_quoted_texte)
+                data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
+                r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                print(r.status_code, r.reason)
 
         try:
-            tweet_quoted_texte = json_load['quoted_status']['extended_tweet']['full_text']
-            #print(tweet_quoted_texte)
-            data = {"nom": "%s"%tweet_quoted_texte , "structureJSON": "%s"%data_dump}
-            r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
-            print(r.status_code, r.reason)
+            get_text_and_post(data_dump, json_load, 'quoted_status', 'extended_tweet', 'full_text')
         except KeyError:
             print("pas de quoted status")
         try:
-            tweet_texte= json_load['retweeted_status']['extended_tweet']['full_text']
-            data = {"nom": "%s" % tweet_texte, "structureJSON": "%s"%data_dump}
-            r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
-            print(r.status_code, r.reason)
-            #print(tweet_texte)
+            get_text_and_post(data_dump, json_load, 'retweeted_status', 'extended_tweet', 'full_text')
         except KeyError:
             try:
-                tweet_texte= json_load['extended_tweet']['full_text']
-                data = {"nom": "%s" % tweet_texte, "structureJSON": "%s"%data_dump}
-                r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
-                print(r.status_code, r.reason)
-                #print(tweet_texte)
+                get_text_and_post(data_dump, json_load, 'extended_tweet', 'full_text', None)
             except KeyError:
-                tweet_texte =json_load['text']
-                data = {"nom": "%s" % tweet_texte, "structureJSON": "%s"%data_dump}
-                r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
-                print(r.status_code, r.reason)
-                #print(tweet_texte)
+                get_text_and_post(data_dump, json_load, 'text', None, None)
 
     def on_error(self, status_code, data):
         print(status_code, data)
