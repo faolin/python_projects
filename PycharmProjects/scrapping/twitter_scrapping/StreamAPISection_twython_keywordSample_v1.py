@@ -17,10 +17,10 @@ import datetime as dt
 
 # Key, secret, token, token_secret for one of my developer accounts.
 # Update with your own strings as necessary
-APP_KEY = '******'
-APP_SECRET = '*******'
-OAUTH_TOKEN = '********'
-OAUTH_TOKEN_SECRET = '*******'
+APP_KEY = 'z5JSjzaSSBOD7L6s4oRjbiWmC'
+APP_SECRET = 'FTIxEDX7fLUOPzPCT3ntd2t2L2QIKgIEsstNSTqVoAwaVjZbAL'
+OAUTH_TOKEN = '1348855934-IkHdBwiLkhcyFoxHY65Nk8J66BqoGC1bdQabxnO'
+OAUTH_TOKEN_SECRET = '7FWRIksqVP4xFN5XfxygtAndXpUceCdKSvHERhY2S3iCl'
 
 # Make class
 class MyStreamer(twy.TwythonStreamer):
@@ -34,6 +34,12 @@ class MyStreamer(twy.TwythonStreamer):
         json_load = json.loads(test)
         # séléction du texte des tweets
         compteur_hashtags = 0
+
+
+        try:
+            print(json_load['quoted_status'], ['extended_tweet'], ['full_text'])
+        except KeyError:
+            print("pas de quoted status")
         try:
             # boucle for qui cherche dans la structure json du tweet pour trouver les hashtags contenant aquarius
             for i in range(len(json_load['retweeted_status']['extended_tweet']['entities']['hashtags'])):
