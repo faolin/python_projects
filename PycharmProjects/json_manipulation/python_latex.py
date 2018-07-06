@@ -9,7 +9,8 @@ def fill_document(doc):
     :param doc: the document
     :type doc: :class:`pylatex.document.Document` instance
     """
-    with doc.create(Section('A section')):
+    test = "je suis un titre plutot long mais court a lafois ciic"
+    with doc.create(Section(test)):
         doc.append('Some regular text and some ')
         doc.append(italic('italic text. '))
 
@@ -34,5 +35,5 @@ if __name__ == '__main__':
     with doc.create(Section('A second section')):
         doc.append('Some text.')
 
-    doc.generate_pdf('basic_maketitle2', clean_tex=False)
+    doc.generate_pdf('/home/francois/basic_maketitle2', clean_tex=False)
 tex = doc.dumps() # The document as string in LaTeX syntax
