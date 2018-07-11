@@ -15,7 +15,7 @@ OAUTH_TOKEN_SECRET = '7FWRIksqVP4xFN5XfxygtAndXpUceCdKSvHERhY2S3iCl'
 
 
 class MyStreamer(twy.TwythonStreamer):
-    stop_time = dt.datetime.now() + dt.timedelta(minutes=10)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
+    stop_time = dt.datetime.now() + dt.timedelta(minutes=60)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
 
     def on_success(self, data):
         if dt.datetime.now() > self.stop_time:  # Once minutes=10 have passed, stop.  Comment out these 2 lines if do not want timed connection.
@@ -64,7 +64,7 @@ class MyStreamer(twy.TwythonStreamer):
 # Make function.  Tracks key words.
 def streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET):
     stream = MyStreamer(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
-    stream.statuses.filter(track=['connexion', 'ocean', 'submarine cable', 'interconnexion'], language=['fr', 'en'])
+    stream.statuses.filter(track=['Fiber Cable Link', 'subsea', 'submarine cable', 'sea cable','submarine networks', 'Singapore Cable', 'Singapore subsea cable', 'offshore manager', 'ASC', 'SACS', 'Angola Cables', 'undersea', 'deep sea', 'Fibre networks', 'subsea routes', 'superconducting cables', 'broadband investment', 'Southern Cross cable', 'submarine cable system', 'submarine power cables', 'Submarine Systems', 'wind cable', 'Offshore Wind', 'Fiber Cable', 'geotechnical', 'safnog', 'geophysical', 'geochemical', 'offshorewind', 'marine life', 'pollute beach', 'Ocean Conservation', 'pollute sea', 'pollute ocean' 'marine activities', 'endangered species', 'Marine Conservation Zones', 'protected ocean', 'underwater world', 'marine environment', 'Cable System', 'maritime sectors', 'Submarine Telecoms', 'offshore renewables industry', 'wind turbines', 'wind energy', 'offshore environment', 'offshore pipes', 'Offshore Renewable Energy', 'Offshore Services', 'store offshore', 'offshore energy', 'offshore gas', 'offshore oil', 'offshore platform' 'fishing industry', 'Sustainable fisheries', 'marine protection'], language=['fr', 'en'])
 
 
 # Execute
