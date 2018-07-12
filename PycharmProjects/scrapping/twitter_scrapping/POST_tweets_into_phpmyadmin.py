@@ -2,7 +2,7 @@ import twython as twy
 import json
 import datetime as dt
 import requests
-
+import time
 ''' Se connecte a twitter APi streaming, récupére en temps réel des tweets contenant les mots clés précisés et les envoie a une base phpmyadmin'''
 
 
@@ -31,6 +31,11 @@ class MyStreamer(twy.TwythonStreamer):
                 data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
                 r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
                 print(r.status_code, r.reason)
+                if r.status_code == 429:
+                    print("en attente de pouvoir renvoyer des requêtes au serveur")
+                    time.sleep(70)
+                    r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                    print(r.status_code, r.reason)
 
             if structurejson3 == None and sctructurejson2 != None:
                 tweet_quoted_texte = json_load[structurejson1][sctructurejson2]
@@ -38,6 +43,11 @@ class MyStreamer(twy.TwythonStreamer):
                 data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
                 r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
                 print(r.status_code, r.reason)
+                if r.status_code == 429:
+                    print("en attente de pouvoir renvoyer des requêtes au serveur")
+                    time.sleep(70)
+                    r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                    print(r.status_code, r.reason)
 
             if structurejson3 == None and sctructurejson2 == None:
                 tweet_quoted_texte = json_load[structurejson1]
@@ -45,6 +55,11 @@ class MyStreamer(twy.TwythonStreamer):
                 data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
                 r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
                 print(r.status_code, r.reason)
+                if r.status_code == 429:
+                    print("en attente de pouvoir renvoyer des requêtes au serveur")
+                    time.sleep(70)
+                    r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                    print(r.status_code, r.reason)
 
         try:
             get_text_and_post(data_dump, json_load, 'quoted_status', 'extended_tweet', 'full_text')
