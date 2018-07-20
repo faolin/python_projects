@@ -7,8 +7,7 @@ import ast, sys
 
 input_filenames =  glob.glob("/home/francois/Documents/sextant/*.json")
 
-output_filename= "/home/francois/Documents/resultat.json"
-
+output_filename= "/home/francois/Documents/datacatalog.json"
 
 
 
@@ -17,15 +16,14 @@ output_filename= "/home/francois/Documents/resultat.json"
 def cat_json(output_filename, input_filenames):
     compteur = 0
     with open(output_filename, "w") as outfile:
-
+        outfile.write('[')
         for infile_name in input_filenames:
             with open(infile_name) as infile:
                 #aprés avoir ouvert le fichier on récupére toutes les données en texte
                 infile_to_rawtext= infile.read()
                 #on utlise la fonction json.loads pour pouvoir ensuite récuperer des éléments précis de la structure du fichier json
                 json_load=json.loads(infile_to_rawtext, 'utf-8')
-                print(infile)
-
+                #print(infile)
                 for i in range(int(json_load['@to'])- int(json_load['@from']) ):
 
 
@@ -92,16 +90,18 @@ def cat_json(output_filename, input_filenames):
 
                     json_final = string_sans_crochet_a_la_fin + ','+ ' "location": "{}, {}" ' .format(lat_centrale, long_centrale) +'}'
 
-                    print(json_final)
-
+                    #print(json_final)
+                    #print(file_number)
                     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     #bien penser a mettre le même nom d'index que celui sur elasticsearch si l'on souhaite importer les données dans l'index déja crée
-                    outfile.write('{"index": {"_index": "result2", "_type": "enregistrement", "_id": %d}}'%compteur + '\n')
-                    outfile.write(str(json_final) + '\n')
+                    #outfile.write('{"index": {"_index": "result2", "_type": "enregistrement", "_id": %d}}'%compteur + '\n')
+                    if compteur !=6553: # changer ce nombre selon le nombre d'entrées
+                        outfile.write(json_final)
+                        outfile.write(',')
+                    else:
+                        outfile.write(json_final)
 
-
-
-
+        outfile.write(']')
 
 cat_json(output_filename, input_filenames)
 
