@@ -229,9 +229,9 @@ def remove_emoji(fichier_emoticone, texte):
                 print("emote trouvée", all_emoticone[y])
                 compteur_emote += 1
                 if pas_emoticon == "":
-                    pas_emoticon = texte.replace(all_emoticone[y], ' ')
+                    pas_emoticon = texte.replace(all_emoticone[y], '')
                 else:
-                    pas_emoticon = pas_emoticon.replace(all_emoticone[y], ' ')
+                    pas_emoticon = pas_emoticon.replace(all_emoticone[y], '')
         if compteur_emote == 0 :
             print("pas d'emote détéctée.")
             return texte
@@ -263,13 +263,13 @@ def remove_punctuation(texte):
 def nettoyer_le_texte(language, texte): # regroupement de toutes les fonctions pour nettoyer le texte
     no_url = remove_url(texte)
     no_emoji = remove_emoji(fichier_emoticone, no_url)
-    no_hashtags = remove_hashtags(no_emoji)
+    '''no_hashtags = remove_hashtags(no_emoji)
     if no_hashtags == no_emoji:
         print("pas de hashtags détécté")
     else:
-        print("remove hashtags : ", no_hashtags)
-    remove_username = remove_username_twitter(no_hashtags)
-    if remove_username == no_hashtags:
+        print("remove hashtags : ", no_hashtags)'''
+    remove_username = remove_username_twitter(no_emoji)
+    if remove_username == no_emoji:
         print("pas de username détécté.")
     else:
         print("remove username :", remove_username)
@@ -369,7 +369,7 @@ if __name__ == "__main__":
                 # test pour récupérer le texte du tweet, un tweet peut avoir une structure json différente selon son nombre de charactére, il est donc nécessaire
                 # d'avoir toutes les possibilités de l'emplacement du texte du tweet
                 try:
-                    if  json_load['is_quote_status'] == True:
+                    if json_load['is_quote_status'] == True:
                         if contents_load[i]['nom'] == json_load['quoted_status']['extended_tweet']['full_text']:
                             get_tweets_nettoye_enregistre('en', 'quoted_status', 'extended_tweet', 'full_text')
                 except KeyError:
