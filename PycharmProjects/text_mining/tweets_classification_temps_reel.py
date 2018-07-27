@@ -40,7 +40,7 @@ tokenizer = TweetTokenizer(reduce_len=True, strip_handles=True, preserve_case=Fa
 
 '''tout les outils de classification'''
 MODEL_PATH = 'model.pkl'
-SOURCE = "/home/francois/Téléchargements/imdb.csv" # base d'entrainement du classifier
+SOURCE = 'Base_tweets_finale.json' # base d'entrainement du classifier
 ENCODING = "ISO-8859-1"
 action = '' # si l'on veut entrainer l'outil sur une base mettre 'train', sinon le laisser vide (si un model.plk existe déja)
 #
@@ -71,20 +71,35 @@ def tfidf_process(data):
 def retrieve_data(source_name=SOURCE):
     import pandas as pd
     import numpy as np
+    import json
     frac = 0.9
 
-    df = pd.read_csv(source_name, header=0, encoding=ENCODING)
-    df = df[df.text.notnull()]
-    print(df.text == '')
+    all_tweets = []
+    all_notation = []
 
-    df['split'] = np.random.randn(df.shape[0], 1)
+    with open(source_name, 'r') as infile:
+        '''contents = urllib.request.urlopen("https://mds-dev.sinay.fr/api/tweet").read()
+        contents = contents.decode('utf-8')
+        json_load = json.loads(contents)
+        '''
+        raw_text = infile.read()
+        json_load = json.loads(raw_text, 'utf-8')
 
-    msk = np.random.rand(len(df)) <= frac
+        for i in range(len(json_load)):
+            if json_load[i]['interessant'] != None:
+                if json_load[i]['nom_nettoye'] != None:
+                    all_tweets.append(json_load[i]['nom_nettoye'])
+                    all_notation.append(json_load[i]['interessant'])
 
-    train = df[msk]
-    test = df[~msk]
+        df = pd.DataFrame({'tweet': all_tweets, 'interessant': all_notation})
+        df['split'] = np.random.randn(df.shape[0], 1)
+        msk = np.random.rand(len(df)) <= frac
+        train = df[msk]
+        print(train)
 
-    return train['text'], train['polarity'], test['text'], test['polarity']
+        test = df[~msk]
+
+    return train['tweet'], train['interessant'], test['tweet'], test['interessant']
 
 
 def train_sgd(Xtrain, Ytrain):
@@ -162,393 +177,392 @@ else:
 
 
 # connexion a twitter et récuperation des tweets
-class MyStreamer(twy.TwythonStreamer):
-    fileDirectory = '/home/francois/Documents/twitter_scrapping/'  # Any result from this class will save to this directory
-    stop_time = dt.datetime.now() + dt.timedelta(
-        minutes=10)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
+    class MyStreamer(twy.TwythonStreamer):
+        fileDirectory = '/home/francois/Documents/twitter_scrapping/'  # Any result from this class will save to this directory
+        stop_time = dt.datetime.now() + dt.timedelta(
+            minutes=10)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
 
-    def on_success(self, data):
-        if dt.datetime.now() > self.stop_time:  # Once minutes=60 have passed, stop.  Comment out these 2 lines if do not want timed connection.
-            raise Exception('Time expired')
-        tweet = json.dumps(data, ensure_ascii=False)
-        json_load = json.loads(tweet)
-        # séléction du texte des tweets
-        compteur_hashtags = 0
+        def on_success(self, data):
+            if dt.datetime.now() > self.stop_time:  # Once minutes=60 have passed, stop.  Comment out these 2 lines if do not want timed connection.
+                raise Exception('Time expired')
+            tweet = json.dumps(data, ensure_ascii=False)
+            json_load = json.loads(tweet)
+            # séléction du texte des tweets
+            compteur_hashtags = 0
 
 
-        # toutes les fonctions de nettoyage du tweet
-        def remove_stopswords(language, texte_tokenize):
-            wordsFiltered = []
-            if (language == 'fr'):
-                for w in texte_tokenize:
-                    if w not in stopWords_fr:
-                        wordsFiltered.append(w)
-                print("remove stopwords", wordsFiltered)
-                return wordsFiltered
-            if (language == 'en'):
-                for w in texte_tokenize:
-                    if w not in stopWords_en:
-                        wordsFiltered.append(w)
-                print("remove stopwords", wordsFiltered)
-                return wordsFiltered
+            # toutes les fonctions de nettoyage du tweet
+            def remove_stopswords(language, texte_tokenize):
+                wordsFiltered = []
+                if (language == 'fr'):
+                    for w in texte_tokenize:
+                        if w not in stopWords_fr:
+                            wordsFiltered.append(w)
+                    print("remove stopwords", wordsFiltered)
+                    return wordsFiltered
+                if (language == 'en'):
+                    for w in texte_tokenize:
+                        if w not in stopWords_en:
+                            wordsFiltered.append(w)
+                    print("remove stopwords", wordsFiltered)
+                    return wordsFiltered
 
-        def stemmatisation(language, texte):
-            liste_mots_stem = ""
-            if (language == 'fr'):
-                for i in range(len(texte)):
-                    liste_mots_stem = liste_mots_stem + " " + stemmer.stem(texte[i])
-            if (language == 'en'):
-                for i in range(len(texte)):
-                    liste_mots_stem = liste_mots_stem + " " + stemmer_english.stem(texte[i])
-            print("stemmatisaton: ", liste_mots_stem)
-            return liste_mots_stem
+            def stemmatisation(language, texte):
+                liste_mots_stem = ""
+                if (language == 'fr'):
+                    for i in range(len(texte)):
+                        liste_mots_stem = liste_mots_stem + " " + stemmer.stem(texte[i])
+                if (language == 'en'):
+                    for i in range(len(texte)):
+                        liste_mots_stem = liste_mots_stem + " " + stemmer_english.stem(texte[i])
+                print("stemmatisaton: ", liste_mots_stem)
+                return liste_mots_stem
 
-        def remove_url(texte):
-            resultat = re.sub(r"http\S+", "", texte)
-            if resultat == texte:
-                print("pas d'url detéctée")
-                return texte
-            else:
-                print("remove url:", resultat)
-                return resultat
+            def remove_url(texte):
+                resultat = re.sub(r"http\S+", "", texte)
+                if resultat == texte:
+                    print("pas d'url detéctée")
+                    return texte
+                else:
+                    print("remove url:", resultat)
+                    return resultat
 
-        def remove_username_twitter(texte):  # enléve les user mention et les username d'un tweet
-            texte_sans_username = ""
-            texte_sans_user_mention = ""
+            def remove_username_twitter(texte):  # enléve les user mention et les username d'un tweet
+                texte_sans_username = ""
+                texte_sans_user_mention = ""
 
-            def all_user_mention_path(texte_sans_user_mention, structurejson1, structurejson2, structurejson3,
-                                      structurejson4):
-                if structurejson3 == None and structurejson4 == None:
-                    nbr_user_mention = len(json_load[structurejson1][structurejson2])
-                    struct_user_mention = json_load[structurejson1][structurejson2]
-                if structurejson4 == None and structurejson3 != None:
-                    nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3])
-                    struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
-                if structurejson1 != None and structurejson2 != None and structurejson3 != None and structurejson4 != None:
-                    nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3][structurejson4])
-                    struct_user_mention = json_load[structurejson1][structurejson2][structurejson3][structurejson4]
+                def all_user_mention_path(texte_sans_user_mention, structurejson1, structurejson2, structurejson3,
+                                          structurejson4):
+                    if structurejson3 == None and structurejson4 == None:
+                        nbr_user_mention = len(json_load[structurejson1][structurejson2])
+                        struct_user_mention = json_load[structurejson1][structurejson2]
+                    if structurejson4 == None and structurejson3 != None:
+                        nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3])
+                        struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
+                    if structurejson1 != None and structurejson2 != None and structurejson3 != None and structurejson4 != None:
+                        nbr_user_mention = len(json_load[structurejson1][structurejson2][structurejson3][structurejson4])
+                        struct_user_mention = json_load[structurejson1][structurejson2][structurejson3][structurejson4]
 
-                for i in range(nbr_user_mention):
-                    user_mention = "@" + struct_user_mention[i]['screen_name']
-                    if texte_sans_user_mention == "":
-                        elem2 = [x for x in texte.split()]
+                    for i in range(nbr_user_mention):
+                        user_mention = "@" + struct_user_mention[i]['screen_name']
+                        if texte_sans_user_mention == "":
+                            elem2 = [x for x in texte.split()]
+                        else:
+                            elem2 = [x for x in texte_sans_user_mention.split()]
+                        for item in elem2:
+                            index = item.lower().find(user_mention.lower())
+                            if index != -1:
+                                if texte_sans_user_mention == "":
+                                    texte_sans_user_mention = texte.replace(item, "")
+                                    texte_sans_user_mention = texte_sans_user_mention.replace(item.lower(), "")
+                                else:
+                                    texte_sans_user_mention = texte_sans_user_mention.replace(item, "")
+                                    texte_sans_user_mention = texte_sans_user_mention.replace(item.lower(), "")
+                    return texte_sans_user_mention
+
+                try:
+                    texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'quoted_status',
+                                                                    'extended_tweet', 'entities', 'user_mentions')
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+                try:
+                    texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'quoted_status', 'entities',
+                                                                    'user_mentions', None)
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+                try:
+                    texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'extended_tweet', 'entities',
+                                                                    'user_mentions', None)
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+                try:
+                    texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status',
+                                                                    'extended_tweet', 'entities', 'user_mentions')
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+                try:
+                    texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status', 'entities',
+                                                                    'user_mentions', None)
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+                try:
+                    texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'entities', 'user_mentions',
+                                                                    None, None)
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+
+                def all_username_path(texte_sans_username, texte_sans_user_mention, structurejson1, structurejson2,
+                                      structurejson3):
+                    if structurejson3 == None and structurejson2 == None:
+                        struct_user_mention = json_load[structurejson1]
                     else:
-                        elem2 = [x for x in texte_sans_user_mention.split()]
-                    for item in elem2:
+                        struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
+                    user_mention = "@" + struct_user_mention
+                    if texte_sans_user_mention == "":
+                        elem3 = [x for x in texte.split()]
+                    else:
+                        elem3 = [x for x in texte_sans_user_mention.split()]
+                    for item in elem3:
                         index = item.lower().find(user_mention.lower())
                         if index != -1:
                             if texte_sans_user_mention == "":
-                                texte_sans_user_mention = texte.replace(item, "")
-                                texte_sans_user_mention = texte_sans_user_mention.replace(item.lower(), "")
+                                texte_sans_username = texte.replace(item, "")
+                                texte_sans_username = texte_sans_username.replace(item.lower(), "")
                             else:
-                                texte_sans_user_mention = texte_sans_user_mention.replace(item, "")
-                                texte_sans_user_mention = texte_sans_user_mention.replace(item.lower(), "")
-                return texte_sans_user_mention
-
-            try:
-                texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'quoted_status',
-                                                                'extended_tweet', 'entities', 'user_mentions')
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-            try:
-                texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'quoted_status', 'entities',
-                                                                'user_mentions', None)
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-            try:
-                texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'extended_tweet', 'entities',
-                                                                'user_mentions', None)
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-            try:
-                texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status',
-                                                                'extended_tweet', 'entities', 'user_mentions')
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-            try:
-                texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'retweeted_status', 'entities',
-                                                                'user_mentions', None)
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-            try:
-                texte_sans_user_mention = all_user_mention_path(texte_sans_user_mention, 'entities', 'user_mentions',
-                                                                None, None)
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-
-            def all_username_path(texte_sans_username, texte_sans_user_mention, structurejson1, structurejson2,
-                                  structurejson3):
-                if structurejson3 == None and structurejson2 == None:
-                    struct_user_mention = json_load[structurejson1]
-                else:
-                    struct_user_mention = json_load[structurejson1][structurejson2][structurejson3]
-                user_mention = "@" + struct_user_mention
-                if texte_sans_user_mention == "":
-                    elem3 = [x for x in texte.split()]
-                else:
-                    elem3 = [x for x in texte_sans_user_mention.split()]
-                for item in elem3:
-                    index = item.lower().find(user_mention.lower())
-                    if index != -1:
-                        if texte_sans_user_mention == "":
-                            texte_sans_username = texte.replace(item, "")
-                            texte_sans_username = texte_sans_username.replace(item.lower(), "")
+                                texte_sans_username = texte_sans_user_mention.replace(item, "")
+                                texte_sans_username = texte_sans_username.replace(item.lower(), "")
                         else:
-                            texte_sans_username = texte_sans_user_mention.replace(item, "")
-                            texte_sans_username = texte_sans_username.replace(item.lower(), "")
+                            if texte_sans_user_mention == "":
+                                texte_sans_username = texte
+                            else:
+                                texte_sans_username = texte_sans_user_mention
+                    return texte_sans_username
+
+                try:
+                    texte_sans_username = all_username_path(texte_sans_username, texte_sans_user_mention,
+                                                            'retweeted_status', 'user', 'screen_name')
+                    return texte_sans_username
+                except KeyError:
+                    result = "pas de user mention pour la structure json ci-dessus"
+                try:
+                    texte_sans_username = all_username_path(texte_sans_username, texte_sans_user_mention,
+                                                            'in_reply_to_screen_name', None, None)
+                    return texte_sans_username
+                except TypeError:
+                    if texte_sans_user_mention == "":
+                        return texte
                     else:
-                        if texte_sans_user_mention == "":
-                            texte_sans_username = texte
-                        else:
-                            texte_sans_username = texte_sans_user_mention
-                return texte_sans_username
+                        return texte_sans_user_mention
 
-            try:
-                texte_sans_username = all_username_path(texte_sans_username, texte_sans_user_mention,
-                                                        'retweeted_status', 'user', 'screen_name')
-                return texte_sans_username
-            except KeyError:
-                result = "pas de user mention pour la structure json ci-dessus"
-            try:
-                texte_sans_username = all_username_path(texte_sans_username, texte_sans_user_mention,
-                                                        'in_reply_to_screen_name', None, None)
-                return texte_sans_username
-            except TypeError:
-                if texte_sans_user_mention == "":
+            def remove_hashtags(texte):
+                texte_sans_hashtags = ""
+
+                def all_hashtags_path(texte_sans_hashtags, structurejson1, structurejson2, structurejson3, structurejson4):
+                    if structurejson3 == None and structurejson4 == None:
+                        nbr_hashtages = len(json_load[structurejson1][structurejson2])
+                        struct_hashtags = json_load[structurejson1][structurejson2]
+                    if structurejson4 == None and structurejson3 != None:
+                        nbr_hashtages = len(json_load[structurejson1][structurejson2][structurejson3])
+                        struct_hashtags = json_load[structurejson1][structurejson2][structurejson3]
+                    if structurejson1 != None and structurejson2 != None and structurejson3 != None and structurejson4 != None:
+                        nbr_hashtages = len(json_load[structurejson1][structurejson2][structurejson3][structurejson4])
+                        struct_hashtags = json_load[structurejson1][structurejson2][structurejson3][structurejson4]
+
+                    for i in range(nbr_hashtages):
+                        hashtags = "#" + struct_hashtags[i]['text']
+                        if texte_sans_hashtags == "":
+                            elem2 = [x for x in texte.split()]
+                        else:
+                            elem2 = [x for x in texte_sans_hashtags.split()]
+                        for item in elem2:
+                            index = item.find(hashtags)
+                            if index != -1:
+                                if texte_sans_hashtags == "":
+                                    texte_sans_hashtags = texte.replace(item, "")
+                                else:
+                                    texte_sans_hashtags = texte_sans_hashtags.replace(item, "")
+                    return texte_sans_hashtags
+
+                try:
+                    texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'quoted_status', 'extended_tweet',
+                                                            'entities', 'hashtags')
+                except KeyError:
+                    result = "pas de hashtags pour la structure json ci-dessus"
+                try:
+                    texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'quoted_status', 'entities', 'hashtags',
+                                                            None)
+                except KeyError:
+                    result = "pas de hashtags pour la structure json ci-dessus"
+                try:
+                    texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'extended_tweet', 'entities', 'hashtags',
+                                                            None)
+                except KeyError:
+                    result = "pas de hashtags pour la structure json ci-dessus"
+                try:
+                    texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'extended_tweet',
+                                                            'entities', 'hashtags')
+                except KeyError:
+                    result = "pas de hashtags pour la structure json ci-dessus"
+                try:
+                    texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'entities', 'hashtags',
+                                                            None)
+                except KeyError:
+                    result = "pas de hashtags pour la structure json ci-dessus"
+                try:
+                    texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'entities', 'hashtags', None, None)
+                except KeyError:
+                    result = "pas de hashtags pour la structure json ci-dessus"
+
+                if texte_sans_hashtags == "":
                     return texte
                 else:
-                    return texte_sans_user_mention
+                    return texte_sans_hashtags
 
-        def remove_hashtags(texte):
-            texte_sans_hashtags = ""
-
-            def all_hashtags_path(texte_sans_hashtags, structurejson1, structurejson2, structurejson3, structurejson4):
-                if structurejson3 == None and structurejson4 == None:
-                    nbr_hashtages = len(json_load[structurejson1][structurejson2])
-                    struct_hashtags = json_load[structurejson1][structurejson2]
-                if structurejson4 == None and structurejson3 != None:
-                    nbr_hashtages = len(json_load[structurejson1][structurejson2][structurejson3])
-                    struct_hashtags = json_load[structurejson1][structurejson2][structurejson3]
-                if structurejson1 != None and structurejson2 != None and structurejson3 != None and structurejson4 != None:
-                    nbr_hashtages = len(json_load[structurejson1][structurejson2][structurejson3][structurejson4])
-                    struct_hashtags = json_load[structurejson1][structurejson2][structurejson3][structurejson4]
-
-                for i in range(nbr_hashtages):
-                    hashtags = "#" + struct_hashtags[i]['text']
-                    if texte_sans_hashtags == "":
-                        elem2 = [x for x in texte.split()]
-                    else:
-                        elem2 = [x for x in texte_sans_hashtags.split()]
-                    for item in elem2:
-                        index = item.find(hashtags)
-                        if index != -1:
-                            if texte_sans_hashtags == "":
-                                texte_sans_hashtags = texte.replace(item, "")
+            def remove_emoji(fichier_emoticone, texte):
+                pas_emoticon = ""
+                compteur_emote = 0
+                with open(fichier_emoticone, "r") as fichier_emoticone:
+                    fichier_emoticone_to_rawtext = fichier_emoticone.read()
+                    all_emoticone = fichier_emoticone_to_rawtext.split("\n")
+                    for y in range(len(all_emoticone)):
+                        if all_emoticone[y] in texte:
+                            compteur_emote += 1
+                            if pas_emoticon == "":
+                                pas_emoticon = texte.replace(all_emoticone[y], ' ')
                             else:
-                                texte_sans_hashtags = texte_sans_hashtags.replace(item, "")
-                return texte_sans_hashtags
+                                pas_emoticon = pas_emoticon.replace(all_emoticone[y], ' ')
+                    if compteur_emote == 0:
+                        return texte
+                    else:
+                        return pas_emoticon
 
-            try:
-                texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'quoted_status', 'extended_tweet',
-                                                        'entities', 'hashtags')
-            except KeyError:
-                result = "pas de hashtags pour la structure json ci-dessus"
-            try:
-                texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'quoted_status', 'entities', 'hashtags',
-                                                        None)
-            except KeyError:
-                result = "pas de hashtags pour la structure json ci-dessus"
-            try:
-                texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'extended_tweet', 'entities', 'hashtags',
-                                                        None)
-            except KeyError:
-                result = "pas de hashtags pour la structure json ci-dessus"
-            try:
-                texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'extended_tweet',
-                                                        'entities', 'hashtags')
-            except KeyError:
-                result = "pas de hashtags pour la structure json ci-dessus"
-            try:
-                texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'retweeted_status', 'entities', 'hashtags',
-                                                        None)
-            except KeyError:
-                result = "pas de hashtags pour la structure json ci-dessus"
-            try:
-                texte_sans_hashtags = all_hashtags_path(texte_sans_hashtags, 'entities', 'hashtags', None, None)
-            except KeyError:
-                result = "pas de hashtags pour la structure json ci-dessus"
+            # pas utile pour le moment
+            def remove_symbols(texte):
 
-            if texte_sans_hashtags == "":
+                nbr_symbol = len(json_load['entities']['symbols'])
+                for i in range(nbr_symbol):
+                    symbol = json_load['entities']['symbols'][i]
+                    texte = texte.replace(symbol, " ")
+                #print("symbols remove:", texte)
                 return texte
-            else:
-                return texte_sans_hashtags
 
-        def remove_emoji(fichier_emoticone, texte):
-            pas_emoticon = ""
-            compteur_emote = 0
-            with open(fichier_emoticone, "r") as fichier_emoticone:
-                fichier_emoticone_to_rawtext = fichier_emoticone.read()
-                all_emoticone = fichier_emoticone_to_rawtext.split("\n")
-                for y in range(len(all_emoticone)):
-                    if all_emoticone[y] in texte:
-                        print("emote trouvée", all_emoticone[y])
-                        compteur_emote += 1
-                        if pas_emoticon == "":
-                            pas_emoticon = texte.replace(all_emoticone[y], ' ')
-                        else:
-                            pas_emoticon = pas_emoticon.replace(all_emoticone[y], ' ')
-                if compteur_emote == 0:
-                    print("pas d'emote détéctée.")
-                    return texte
+            def remove_punctuation(texte):
+                no_punctuation = texte.translate(str.maketrans({a: " " for a in string.punctuation}))
+                no_punctuation = no_punctuation.replace('’', ' ')
+                no_punctuation = no_punctuation.replace('«', ' ')
+                no_punctuation = no_punctuation.replace('»', ' ')
+                no_punctuation = no_punctuation.replace('➡', ' ')
+                no_punctuation = no_punctuation.replace('•', ' ')
+                no_punctuation = no_punctuation.replace('°', ' ')
+                no_punctuation = no_punctuation.replace('×', ' ')
+                print("remove punctuation: ", no_punctuation)
+                return no_punctuation
+
+            def nettoyer_le_texte(language, texte):  # regroupement de toutes les fonctions pour nettoyer le texte
+                no_url = remove_url(texte)
+                no_emoji = remove_emoji(fichier_emoticone, no_url)
+                '''no_hashtags = remove_hashtags(no_emoji)
+                if no_hashtags == no_emoji:
+                    print("pas de hashtags détécté")
                 else:
-                    print("remove emoji: ", pas_emoticon)
-                    return pas_emoticon
-
-        # pas utile pour le moment
-        def remove_symbols(texte):
-
-            nbr_symbol = len(json_load['entities']['symbols'])
-            for i in range(nbr_symbol):
-                symbol = json_load['entities']['symbols'][i]
-                texte = texte.replace(symbol, " ")
-            print("symbols remove:", texte)
-            return texte
-
-        def remove_punctuation(texte):
-            no_punctuation = texte.translate(str.maketrans({a: " " for a in string.punctuation}))
-            no_punctuation = no_punctuation.replace('’', ' ')
-            no_punctuation = no_punctuation.replace('«', ' ')
-            no_punctuation = no_punctuation.replace('»', ' ')
-            no_punctuation = no_punctuation.replace('➡', ' ')
-            no_punctuation = no_punctuation.replace('•', ' ')
-            no_punctuation = no_punctuation.replace('°', ' ')
-            no_punctuation = no_punctuation.replace('×', ' ')
-            print("remove punctuation: ", no_punctuation)
-            return no_punctuation
-
-        def nettoyer_le_texte(language, texte):  # regroupement de toutes les fonctions pour nettoyer le texte
-            no_url = remove_url(texte)
-            no_emoji = remove_emoji(fichier_emoticone, no_url)
-            no_hashtags = remove_hashtags(no_emoji)
-            if no_hashtags == no_emoji:
-                print("pas de hashtags détécté")
-            else:
-                print("remove hashtags : ", no_hashtags)
-            remove_username = remove_username_twitter(no_hashtags)
-            if remove_username == no_hashtags:
-                print("pas de username détécté.")
-            else:
-                print("remove username :", remove_username)
-            no_punctuation = remove_punctuation(remove_username)
-            texte_tokenize = tokenizer.tokenize(no_punctuation)
-            print("tokenisation : ", texte_tokenize)
-            words_stopped = remove_stopswords(language, texte_tokenize)
-            texte_stemmatiser = stemmatisation(language, words_stopped)
-            return texte_stemmatiser
-
-        def get_tweets_nettoye_classifie(lang, structurejson1, structurejson2, structurejson3):
-
-            if (structurejson3 == None and structurejson2 != None):
-                text = json_load[structurejson1][structurejson2]
-                # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
-                text_nettoyer = nettoyer_le_texte(lang, text)
-                prediction = tweet_classifier(text_nettoyer)
-                if prediction == 1:
-                    print("/////tweet: ", json_load[structurejson1][structurejson2])
-                    print("texte nettoyé:", text_nettoyer)
-                    print("prediction :", prediction)
-                    return text_nettoyer
+                    print("remove hashtags : ", no_hashtags)'''
+                remove_username = remove_username_twitter(no_emoji)
+                if remove_username == no_emoji:
+                    print("pas de username détécté.")
                 else:
-                    print("tweet non-intéréssant")
-                    return None
-                #outfile.write(text_nettoyer)
-            if (structurejson3 == None and structurejson2 == None):
-                text = json_load[structurejson1]
-                # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
-                text_nettoyer = nettoyer_le_texte(lang, text)
-                #on récupere la prédiction du classifier
-                prediction = tweet_classifier(text_nettoyer)
-                #outfile.write(text_nettoyer)
-                if prediction == 1:
-                    print("/////tweet: ", json_load[structurejson1])
-                    print("texte nettoyé:", text_nettoyer)
-                    print("prediction :", prediction)
-                    return text_nettoyer
-                else:
-                    print("tweet non-intéréssant")
-                    return None
-            if (structurejson3 != None and structurejson2 != None):
-                text = json_load[structurejson1][structurejson2][structurejson3]
-                # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
-                text_nettoyer = nettoyer_le_texte(lang, text)
-                prediction = tweet_classifier(text_nettoyer)
-                #outfile.write(text_nettoyer)
-                if prediction == 1:
-                    print("/////tweet: ", json_load[structurejson1][structurejson2][structurejson3])
-                    print("texte nettoyé:", text_nettoyer)
-                    print("prediction :", prediction)
-                    return text_nettoyer
-                else:
-                    print("tweet non-intéréssant")
-                    return None
+                    print("remove username :", remove_username)
+                no_punctuation = remove_punctuation(remove_username)
+                texte_tokenize = tokenizer.tokenize(no_punctuation)
+                print("tokenisation : ", texte_tokenize)
+                words_stopped = remove_stopswords(language, texte_tokenize)
+                texte_stemmatiser = stemmatisation(language, words_stopped)
+                return texte_stemmatiser
+
+            def get_tweets_nettoye_classifie(lang, structurejson1, structurejson2, structurejson3):
+
+                if (structurejson3 == None and structurejson2 != None):
+                    text = json_load[structurejson1][structurejson2]
+                    # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
+                    text_nettoyer = nettoyer_le_texte(lang, text)
+                    prediction = tweet_classifier(text_nettoyer)
+                    print('prédiction :', prediction[0])
+                    if int(prediction[0]) != 0:
+                        print("/////tweet: ", json_load[structurejson1][structurejson2])
+                        #print("texte nettoyé:", text_nettoyer)
+                        print("prediction :", prediction)
+                        return text_nettoyer
+                    else:
+                        print("tweet non-intéréssant")
+                        print(text)
+                        return None
+                    #outfile.write(text_nettoyer)
+                if (structurejson3 == None and structurejson2 == None):
+                    text = json_load[structurejson1]
+                    # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
+                    text_nettoyer = nettoyer_le_texte(lang, text)
+                    #on récupere la prédiction du classifier
+                    prediction = tweet_classifier(text_nettoyer)
+                    print('prédiction :', prediction[0])
+                    #outfile.write(text_nettoyer)
+                    if int(prediction[0]) != 0:
+                        print("/////tweet: ", json_load[structurejson1])
+                        #print("texte nettoyé:", text_nettoyer)
+                        print("prediction :", prediction)
+                        return text_nettoyer
+                    else:
+                        print("tweet non-intéréssant")
+                        print(text)
+                        return None
+                if (structurejson3 != None and structurejson2 != None):
+                    text = json_load[structurejson1][structurejson2][structurejson3]
+                    # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
+                    text_nettoyer = nettoyer_le_texte(lang, text)
+                    prediction = tweet_classifier(text_nettoyer)
+                    print('prédiction :', prediction[0])
+                    #outfile.write(text_nettoyer)
+                    if int(prediction[0]) != 0:
+                        print("/////tweet: ", json_load[structurejson1][structurejson2][structurejson3])
+                        #print("texte nettoyé:", text_nettoyer)
+                        print("prediction :", prediction)
+                        return text_nettoyer
+                    else:
+                        print("tweet non-intéréssant")
+                        print(text)
+                        return None
 
 
-        # fonction main
-        if (json_load['lang'] == "fr"):
-            # test pour récupérer le texte du tweet, un tweet peut avoir une structure json différente selon son nombre de charactére, il est donc nécessaire
-            # d'avoir toutes les possibilités de l'emplacement du texte du tweet
-            try:
-                tweet_quoted_nettoye = get_tweets_nettoye_classifie('fr', 'quoted_status', 'extended_tweet', 'full_text')
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            except KeyError:
-                tweet_quoted_nettoye = None
-                print("pas de quoted status")
-            try:
-                tweet_nettoye = get_tweets_nettoye_classifie('fr', 'retweeted_status', 'extended_tweet', 'full_text')
-            except KeyError:
+            # fonction main
+            if (json_load['lang'] == "fr"):
+                # test pour récupérer le texte du tweet, un tweet peut avoir une structure json différente selon son nombre de charactére, il est donc nécessaire
+                # d'avoir toutes les possibilités de l'emplacement du texte du tweet
                 try:
-                    tweet_nettoye = get_tweets_nettoye_classifie('fr', 'extended_tweet', 'full_text', None)
+                    tweet_quoted_nettoye = get_tweets_nettoye_classifie('fr', 'quoted_status', 'extended_tweet', 'full_text')
                 except KeyError:
-                    tweet_nettoye = get_tweets_nettoye_classifie('fr', 'text', None, None)
-
-        if (json_load['lang'] == "en"):
-            # test pour récupérer le texte du tweet, un tweet peut avoir une structure json différente selon son nombre de charactére, il est donc nécessaire
-            # d'avoir toutes les possibilités de l'emplacement du texte du tweet
-            try:
-                tweet_quoted_nettoye = get_tweets_nettoye_classifie('en', 'quoted_status', 'extended_tweet', 'full_text')
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            except KeyError:
-                tweet_quoted_nettoye = None
-                print("pas de quoted status")
-            try:
-                tweet_nettoye =get_tweets_nettoye_classifie('en', 'retweeted_status', 'extended_tweet', 'full_text')
-            except KeyError:
+                    tweet_quoted_nettoye = None
                 try:
-                    tweet_nettoye = get_tweets_nettoye_classifie('en', 'extended_tweet', 'full_text', None)
+                    tweet_nettoye = get_tweets_nettoye_classifie('fr', 'retweeted_status', 'extended_tweet', 'full_text')
                 except KeyError:
-                    tweet_nettoye =get_tweets_nettoye_classifie('en', 'text', None, None)
+                    try:
+                        tweet_nettoye = get_tweets_nettoye_classifie('fr', 'extended_tweet', 'full_text', None)
+                    except KeyError:
+                        tweet_nettoye = get_tweets_nettoye_classifie('fr', 'text', None, None)
 
-        # print("nombre de hashtags aquarius :" + str(compteur_hashtags))
-        fileName = self.fileDirectory + 'Tweets_' + dt.datetime.now().strftime(
-            "%Y_%m_%d_%H") + '.json'  # File name includes date out to hour
-        if tweet_quoted_nettoye is not None:
-            open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file
-        if tweet_nettoye is not None:
-            open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file
+            if (json_load['lang'] == "en"):
+                # test pour récupérer le texte du tweet, un tweet peut avoir une structure json différente selon son nombre de charactére, il est donc nécessaire
+                # d'avoir toutes les possibilités de l'emplacement du texte du tweet
+                try:
+                    tweet_quoted_nettoye = get_tweets_nettoye_classifie('en', 'quoted_status', 'extended_tweet', 'full_text')
+                except KeyError:
+                    tweet_quoted_nettoye = None
+                try:
+                    tweet_nettoye =get_tweets_nettoye_classifie('en', 'retweeted_status', 'extended_tweet', 'full_text')
+                except KeyError:
+                    try:
+                        tweet_nettoye = get_tweets_nettoye_classifie('en', 'extended_tweet', 'full_text', None)
+                    except KeyError:
+                        tweet_nettoye =get_tweets_nettoye_classifie('en', 'text', None, None)
+
+            # print("nombre de hashtags aquarius :" + str(compteur_hashtags))
+            fileName = self.fileDirectory + 'Tweets_' + dt.datetime.now().strftime(
+                "%Y_%m_%d_%H") + '.json'  # File name includes date out to hour
+            if tweet_quoted_nettoye is not None:
+                open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file
+            if tweet_nettoye is not None:
+                open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file
 
 
-    # NB: Because the file name includes the hour, a new file is created automatically every hour.
+        # NB: Because the file name includes the hour, a new file is created automatically every hour.
 
-    def on_error(self, status_code, data):
-        fileName = self.fileDirectory + dt.datetime.now().strftime("%Y_%m_%d_%H") + '_Errors.txt'
-        open(fileName, 'a').write(json.dumps(data))
-
-
-# Make function.  Tracks key words.
-def streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET):
-    stream = MyStreamer(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
-    stream.statuses.filter(track=['mer' , 'bateau'], language=['fr'])
+            def on_error(self, status_code, data):
+                fileName = self.fileDirectory + dt.datetime.now().strftime("%Y_%m_%d_%H") + '_Errors.txt'
+                open(fileName, 'a').write(json.dumps(data))
 
 
-# Execute
-streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+    # Make function.  Tracks key words.
+    def streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET):
+        stream = MyStreamer(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+        stream.statuses.filter(track=['Fiber Cable Link', 'subsea', 'submarine cable', 'sea cable','submarine networks', 'Singapore Cable', 'Singapore subsea cable', 'offshore manager', 'ASC', 'SACS', 'Angola Cables', 'undersea', 'deep sea', 'Fibre networks', 'subsea routes', 'superconducting cables', 'broadband investment', 'Southern Cross cable', 'submarine cable system', 'submarine power cables', 'Submarine Systems', 'wind cable', 'Offshore Wind', 'Fiber Cable', 'geotechnical', 'safnog', 'geophysical', 'geochemical', 'offshorewind', 'marine life', 'pollute beach', 'Ocean Conservation', 'pollute sea', 'pollute ocean' 'marine activities', 'endangered species', 'Marine Conservation Zones', 'protected ocean', 'underwater world', 'marine environment', 'Cable System', 'maritime sectors', 'Submarine Telecoms', 'offshore renewables industry', 'wind turbines', 'wind energy', 'offshore environment', 'offshore pipes', 'Offshore Renewable Energy', 'Offshore Services', 'store offshore', 'offshore energy', 'offshore gas', 'offshore oil', 'offshore platform' 'fishing industry', 'Sustainable fisheries', 'marine protection'], language=['fr', 'en'], stall_warnings=True)
+
+
+    # Execute
+    streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
