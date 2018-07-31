@@ -127,18 +127,30 @@ def write_txt(data, name):
 
 
 def train_and_test(vectorizer, training_function):
-    print("-----------------------TRAINING THE MODEL---------------------------")
+
+    print ("-----------------------TRAINING THE MODEL---------------------------")
+    # avec TF-IDF
+    '''Xtrain_uni = vectorizer.transform(Xtrain_text)
+    uni_tfidf_transformer = tfidf_process(Xtrain_uni)
+    Xtrain_tf_uni = uni_tfidf_transformer.transform(Xtrain_uni)
+    classifier = training_function(Xtrain_tf_uni, Ytrain)
+    Ytrain_uni = classifier.predict(Xtrain_tf_uni)'''
+
+    # sans TF-IDF
     Xtrain_uni = vectorizer.transform(Xtrain_text)
     classifier = training_function(Xtrain_uni, Ytrain)
     Ytrain_uni = classifier.predict(Xtrain_uni)
-    print("Train accuracy: ", accuracy(Ytrain, Ytrain_uni))
-    print("\n")
 
-    print("-----------------------TESTING THE MODEL -----------------------")
+
+
+    print ("Train accuracy: ", accuracy(Ytrain, Ytrain_uni))
+    print ("\n")
+
+    print ("-----------------------TESTING THE MODEL -----------------------")
     Xtest_uni = vectorizer.transform(Xtest_text)
     Ytest_uni = classifier.predict(Xtest_uni)
-    print("Test accuracy: ", accuracy(Ytest, Ytest_uni))
-    print("\n")
+    print ("Test accuracy: ", accuracy(Ytest, Ytest_uni))
+    print ("\n")
     return Ytest_uni, classifier
 
 def tweet_classifier(tweet):
@@ -151,7 +163,7 @@ if action == 'train':
     Xtrain_text, Ytrain, Xtest_text, Ytest = retrieve_data()
     print("========================UNIGRAM + SGD================================")
     start = time.time()
-    vectorizer = bigram_process(Xtrain_text)
+    vectorizer = bigram_process(Xtrain_text) #on choisit la fonction bigram ou unigram
     y_true, classifier=train_and_test(vectorizer, train_sgd)
     #y_true_bigram=train_and_test(bigram_process(Xtrain_text), train_sgd)
     print ("Time taken: ", time.time() - start, " seconds")
