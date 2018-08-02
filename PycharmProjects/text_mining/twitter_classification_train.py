@@ -76,7 +76,7 @@ def retrieve_data(source_name=SOURCE):
 
 def train_sgd(Xtrain, Ytrain):
     from sklearn.linear_model import SGDClassifier
-    classifier = SGDClassifier(loss="hinge", penalty="l1", n_iter=20) # 'hinge' loss = linear Support Vector Machine (SVM)
+    classifier = SGDClassifier(loss="hinge", penalty="elasticnet", n_iter=20) # 'hinge' loss = linear Support Vector Machine (SVM)
     print ("SGD Fitting")
     classifier.fit(Xtrain, Ytrain)
     return classifier
@@ -111,13 +111,16 @@ def train_and_test(vectorizer, training_function):
     Ytrain_uni = classifier.predict(Xtrain_uni)
 
 
-
     print ("Train accuracy: ", accuracy(Ytrain, Ytrain_uni))
     print ("\n")
 
     print ("-----------------------TESTING THE MODEL -----------------------")
     Xtest_uni = vectorizer.transform(Xtest_text)
     Ytest_uni = classifier.predict(Xtest_uni)
+
+    from sklearn.metrics import precision_recall_fscore_support
+    print("-----------------precision, recall, f1_score pour les 5 catégories----------------------")
+    print(precision_recall_fscore_support(Ytest, Ytest_uni))
     print ("Test accuracy: ", accuracy(Ytest, Ytest_uni))
     print ("\n")
     return Ytest_uni, classifier
@@ -145,13 +148,13 @@ if __name__ == "__main__":
         Xtrain_text, Ytrain, Xtest_text, Ytest = retrieve_data()
         print("========================BIGRAM + SGD================================")
         start = time.time()
-        vectorizer = bigram_process(Xtrain_text) # on chois bigrame ou unigram ici
+        vectorizer = bigram_process(Xtrain_text) # on choisi bigrame ou unigram ici
         y_true, classifier=train_and_test(vectorizer, train_sgd)
         #y_true_bigram=train_and_test(bigram_process(Xtrain_text), train_sgd)
+        print("total de tweets testés:", len(y_true))
         print ("Time taken: ", time.time() - start, " seconds")
-        print ("test",Ytest)
         Matrice_confusion=confusion_matrix(Ytest,y_true)
-        print("matrice_confusion_unigram",Matrice_confusion)
+        print("matrice_confusion: \n ",Matrice_confusion)
         #Matrice_confusion_bigram=confusion_matrix(Ytest,y_true_bigram)
         #print("matrice_confusion_bigram",Matrice_confusion_bigram)
 
