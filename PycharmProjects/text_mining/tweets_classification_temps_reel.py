@@ -104,8 +104,7 @@ def retrieve_data(source_name=SOURCE):
 
 def train_sgd(Xtrain, Ytrain):
     from sklearn.linear_model import SGDClassifier
-    classifier = SGDClassifier(loss="hinge", penalty="l1",
-                               n_iter=20)  # 'hinge' loss = linear Support Vector Machine (SVM)
+    classifier = SGDClassifier(loss="hinge", penalty="elasticnet", n_iter=20)  # 'hinge' loss = linear Support Vector Machine (SVM)
     print("SGD Fitting")
     classifier.fit(Xtrain, Ytrain)
     return classifier
