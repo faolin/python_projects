@@ -157,6 +157,27 @@ def tweet_classifier(tweet):
     tweet_prediction = model.predict(tweet_vector)
     return tweet_prediction
 
+def formattage_date(): # récupére la date d'aujourd'hui et la formatte pour elasticsearch
+    today_date = dt.datetime.today()
+    split = str(today_date).split(' ')
+    annee_mois_jour = split[0]
+    heure_min_sec = split[1]
+    split_heure_min_sec = heure_min_sec.split(':')
+    sec = split_heure_min_sec[-1]
+    sec = sec.split('.')
+    sec = sec[0]
+    heure_min_sec = '%s'%split_heure_min_sec[-3] + ':' + '%s'%split_heure_min_sec[-2] +':'+ str(sec)
+    date = annee_mois_jour +"T"+ heure_min_sec
+    return date
+
+def post_tweet_elasticsearch(tweet, prediction, json_load):
+    import requests
+    url = 'http://localhost:9200/twitter/tweets/'
+    data = {'tweet': '%s'%tweet, 'categorie': '%d'%prediction, 'date': '%s'%formattage_date(), 'source': '%s'%json.dumps(json_load)} #.strftime("%Y_%m_%d_%H") }
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post(url, data=json.dumps(data), headers=headers)
+    print(r.text)
+
 #création du model de classification ou utilisation de celui-ci si il existe déja
 if action == 'train':
     Xtrain_text, Ytrain, Xtest_text, Ytest = retrieve_data()
@@ -481,6 +502,7 @@ else:
                         print("/////tweet: ", json_load[structurejson1][structurejson2])
                         #print("texte nettoyé:", text_nettoyer)
                         print("prediction :", prediction)
+                        post_tweet_elasticsearch(text, int(prediction[0]), json_load)
                         return text_nettoyer
                     else:
                         print("tweet non-intéréssant")
@@ -499,6 +521,7 @@ else:
                         print("/////tweet: ", json_load[structurejson1])
                         #print("texte nettoyé:", text_nettoyer)
                         print("prediction :", prediction)
+                        post_tweet_elasticsearch(text, int(prediction[0]), json_load)
                         return text_nettoyer
                     else:
                         print("tweet non-intéréssant")
@@ -509,12 +532,13 @@ else:
                     # on nettoie le texte en faisant appel a plusieurs techniques : stopwords, stemmatisation, on enléve les urls, la ponctuation
                     text_nettoyer = nettoyer_le_texte(lang, text)
                     prediction = tweet_classifier(text_nettoyer)
-                    print('prédiction :', prediction[0])
+                    print('prédiction :', int(prediction[0]))
                     #outfile.write(text_nettoyer)
                     if int(prediction[0]) != 0:
                         print("/////tweet: ", json_load[structurejson1][structurejson2][structurejson3])
                         #print("texte nettoyé:", text_nettoyer)
                         print("prediction :", prediction)
+                        post_tweet_elasticsearch(text, int(prediction[0]), json_load)
                         return text_nettoyer
                     else:
                         print("tweet non-intéréssant")
@@ -554,19 +578,21 @@ else:
                         tweet_nettoye =get_tweets_nettoye_classifie('en', 'text', None, None)
 
             # print("nombre de hashtags aquarius :" + str(compteur_hashtags))
-            fileName = self.fileDirectory + 'Tweets_' + dt.datetime.now().strftime(
+            '''fileName = self.fileDirectory + 'Tweets_' + dt.datetime.now().strftime(
                 "%Y_%m_%d_%H") + '.json'  # File name includes date out to hour
             if tweet_quoted_nettoye is not None:
+                #enregistre le fichier en local
                 open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file
+            
             if tweet_nettoye is not None:
-                open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file
+                open(fileName, 'a').write(json.dumps(data, ensure_ascii=False))  # Append tweet to the file'''
 
 
         # NB: Because the file name includes the hour, a new file is created automatically every hour.
 
-            def on_error(self, status_code, data):
+            '''def on_error(self, status_code, data):
                 fileName = self.fileDirectory + dt.datetime.now().strftime("%Y_%m_%d_%H") + '_Errors.txt'
-                open(fileName, 'a').write(json.dumps(data))
+                open(fileName, 'a').write(json.dumps(data))'''
 
 
     # Make function.  Tracks key words.
