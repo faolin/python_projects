@@ -45,6 +45,8 @@ ENCODING = "ISO-8859-1"
 action = '' # si l'on veut entrainer l'outil sur une base mettre 'train', sinon le laisser vide (si un model.plk existe déja)
 #
 
+liste_tweets_interessants = []
+
 '''Toutes les fonctions utilisées par le classifier SVM'''
 
 
@@ -499,11 +501,15 @@ else:
                     prediction = tweet_classifier(text_nettoyer)
                     print('prédiction :', prediction[0])
                     if int(prediction[0]) != 0:
-                        print("/////tweet: ", json_load[structurejson1][structurejson2])
-                        #print("texte nettoyé:", text_nettoyer)
-                        print("prediction :", prediction)
-                        post_tweet_elasticsearch(text, int(prediction[0]), json_load)
-                        return text_nettoyer
+                        if text_nettoyer not in liste_tweets_interessants:
+                            liste_tweets_interessants.append(text_nettoyer)
+                            print("/////tweet: ", json_load[structurejson1][structurejson2])
+                            #print("texte nettoyé:", text_nettoyer)
+                            print("prediction :", prediction)
+                            post_tweet_elasticsearch(text, int(prediction[0]), json_load)
+                            return text_nettoyer
+                        else:
+                            print("tweet intéssants déja vu")
                     else:
                         print("tweet non-intéréssant")
                         print(text)
@@ -518,11 +524,15 @@ else:
                     print('prédiction :', prediction[0])
                     #outfile.write(text_nettoyer)
                     if int(prediction[0]) != 0:
-                        print("/////tweet: ", json_load[structurejson1])
-                        #print("texte nettoyé:", text_nettoyer)
-                        print("prediction :", prediction)
-                        post_tweet_elasticsearch(text, int(prediction[0]), json_load)
-                        return text_nettoyer
+                        if text_nettoyer not in liste_tweets_interessants:
+                            liste_tweets_interessants.append(text_nettoyer)
+                            print("/////tweet: ", json_load[structurejson1])
+                            #print("texte nettoyé:", text_nettoyer)
+                            print("prediction :", prediction)
+                            post_tweet_elasticsearch(text, int(prediction[0]), json_load)
+                            return text_nettoyer
+                        else:
+                            print("tweet intéssants déja vu")
                     else:
                         print("tweet non-intéréssant")
                         print(text)
@@ -535,11 +545,15 @@ else:
                     print('prédiction :', int(prediction[0]))
                     #outfile.write(text_nettoyer)
                     if int(prediction[0]) != 0:
-                        print("/////tweet: ", json_load[structurejson1][structurejson2][structurejson3])
-                        #print("texte nettoyé:", text_nettoyer)
-                        print("prediction :", prediction)
-                        post_tweet_elasticsearch(text, int(prediction[0]), json_load)
-                        return text_nettoyer
+                        if text_nettoyer not in liste_tweets_interessants:
+                            liste_tweets_interessants.append(text_nettoyer)
+                            print("/////tweet: ", json_load[structurejson1][structurejson2][structurejson3])
+                            #print("texte nettoyé:", text_nettoyer)
+                            print("prediction :", prediction)
+                            post_tweet_elasticsearch(text, int(prediction[0]), json_load)
+                            return text_nettoyer
+                        else:
+                            print("tweet intéssants déja vu")
                     else:
                         print("tweet non-intéréssant")
                         print(text)
