@@ -45,7 +45,7 @@ ENCODING = "ISO-8859-1"
 action = '' # si l'on veut entrainer l'outil sur une base mettre 'train', sinon le laisser vide (si un model.plk existe déja)
 #
 
-liste_tweets_interessants = []
+
 
 '''Toutes les fonctions utilisées par le classifier SVM'''
 
@@ -215,10 +215,19 @@ else:
         fileDirectory = '/home/francois/Documents/twitter_scrapping/'  # Any result from this class will save to this directory
         stop_time = dt.datetime.now() + dt.timedelta(
             minutes=10)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
-
+        liste_tweets_interessants = []
+        reset_liste_time = dt.datetime.now() + dt.timedelta(hours=48)
         def on_success(self, data):
             if dt.datetime.now() > self.stop_time:  # Once minutes=60 have passed, stop.  Comment out these 2 lines if do not want timed connection.
                 raise Exception('Time expired')
+            '''on supprime la liste des tweets intéréssants permettant de ne pas envoyer de doublons toutes les 48h afin de ne pas surcharger la mémoire'''
+            if dt.datetime.now() > self.reset_liste_time:
+                print("reset de la liste")
+                self.liste_tweets_interessants = []
+                self.reset_liste_time = self.reset_liste_time + dt.timedelta(hours =48)
+                print("reset du chronométre")
+            print("liste des tweets intéréssants :", self.liste_tweets_interessants)
+            print("chronométre", self.reset_liste_time)
             tweet = json.dumps(data, ensure_ascii=False)
             json_load = json.loads(tweet)
             # séléction du texte des tweets
@@ -501,8 +510,8 @@ else:
                     prediction = tweet_classifier(text_nettoyer)
                     print('prédiction :', prediction[0])
                     if int(prediction[0]) != 0:
-                        if text_nettoyer not in liste_tweets_interessants:
-                            liste_tweets_interessants.append(text_nettoyer)
+                        if text_nettoyer not in self.liste_tweets_interessants:
+                            self.liste_tweets_interessants.append(text_nettoyer)
                             print("/////tweet: ", json_load[structurejson1][structurejson2])
                             #print("texte nettoyé:", text_nettoyer)
                             print("prediction :", prediction)
@@ -524,8 +533,8 @@ else:
                     print('prédiction :', prediction[0])
                     #outfile.write(text_nettoyer)
                     if int(prediction[0]) != 0:
-                        if text_nettoyer not in liste_tweets_interessants:
-                            liste_tweets_interessants.append(text_nettoyer)
+                        if text_nettoyer not in self.liste_tweets_interessants:
+                            self.liste_tweets_interessants.append(text_nettoyer)
                             print("/////tweet: ", json_load[structurejson1])
                             #print("texte nettoyé:", text_nettoyer)
                             print("prediction :", prediction)
@@ -545,8 +554,8 @@ else:
                     print('prédiction :', int(prediction[0]))
                     #outfile.write(text_nettoyer)
                     if int(prediction[0]) != 0:
-                        if text_nettoyer not in liste_tweets_interessants:
-                            liste_tweets_interessants.append(text_nettoyer)
+                        if text_nettoyer not in self.liste_tweets_interessants:
+                            self.liste_tweets_interessants.append(text_nettoyer)
                             print("/////tweet: ", json_load[structurejson1][structurejson2][structurejson3])
                             #print("texte nettoyé:", text_nettoyer)
                             print("prediction :", prediction)
