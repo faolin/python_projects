@@ -28,6 +28,7 @@ class MyStreamer(twy.TwythonStreamer):
     stop_time = dt.datetime.now() + dt.timedelta(minutes=10)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
     
     def on_success(self, data):
+        print(self)
         if dt.datetime.now() > self.stop_time:  # Once minutes=60 have passed, stop.  Comment out these 2 lines if do not want timed connection.
             raise Exception('Time expired')
         test =json.dumps(data, ensure_ascii=False)
@@ -76,7 +77,7 @@ class MyStreamer(twy.TwythonStreamer):
 # Make function.  Tracks key words.
 def streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET):
     stream = MyStreamer(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
-    stream.statuses.filter(track=['mer', 'sea'], language=['fr', 'en'])
+    stream.statuses.filter(track=['mer bateau françois'], language=['fr'])
 
 
 # Execute
