@@ -51,18 +51,14 @@ class MyStreamer(twy.TwythonStreamer):
 
             if structurejson3 == None and sctructurejson2 == None:
                 tweet_quoted_texte = json_load[structurejson1]
-                # print(tweet_quoted_texte)
-                if tweet_quoted_texte == 'RT @nefertizzy: pandas are making a comeback!! we love legends https://t.co/6gCzAoauNv' or tweet_quoted_texte == 'RT @CNN: The giant panda is no longer an endangered species https://t.co/Tl5tM3Xzbg https://t.co/SaUdIGvLUO':
-                    print("fucking panda detected")
-                else :
-                    data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
+                data = {"nom": "%s" % tweet_quoted_texte, "structureJSON": "%s" % data_dump}
+                r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
+                print(r.status_code, r.reason)
+                if r.status_code == 429:
+                    print("en attente de pouvoir renvoyer des requêtes au serveur")
+                    time.sleep(70)
                     r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
                     print(r.status_code, r.reason)
-                    if r.status_code == 429:
-                        print("en attente de pouvoir renvoyer des requêtes au serveur")
-                        time.sleep(70)
-                        r = requests.post("https://mds-dev.sinay.fr/api/tweet", data=data)
-                        print(r.status_code, r.reason)
 
         try:
             get_text_and_post(data_dump, json_load, 'quoted_status', 'extended_tweet', 'full_text')
