@@ -1,3 +1,5 @@
+''' poste depuis un fichier json local des tweets dans une base de données phpmy admin'''
+
 import requests
 import time
 import json
@@ -18,7 +20,7 @@ def get_text_and_post(json_load, nom):
 with open(infile_name, 'r') as infile:
     raw_text = infile.read()
     json_load_all = json.loads(raw_text)
-    for i in range(len(json_load_all)):
+    for i in range(10246, len(json_load_all)):
         json_load = json_load_all[i]['structureJSON']
         nom  = json_load_all[i]['nom']
         get_text_and_post(json_load, nom)
