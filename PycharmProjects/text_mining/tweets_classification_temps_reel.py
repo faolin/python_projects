@@ -50,7 +50,7 @@ action = '' # si l'on veut entrainer l'outil sur une base mettre 'train', sinon 
 '''Toutes les fonctions utilisées par le classifier SVM'''
 
 
-def unigram_process(data):
+def unigram_process(data): #fonction de vectorisation du texte
     from sklearn.feature_extraction.text import CountVectorizer
     vectorizer = CountVectorizer()
     vectorizer = vectorizer.fit(data)
@@ -104,7 +104,7 @@ def retrieve_data(source_name=SOURCE):
     return train['tweet'], train['interessant'], test['tweet'], test['interessant']
 
 
-def train_sgd(Xtrain, Ytrain):
+def train_sgd(Xtrain, Ytrain): # classifier
     from sklearn.linear_model import SGDClassifier
     classifier = SGDClassifier(loss="hinge", penalty="elasticnet", n_iter=20)  # 'hinge' loss = linear Support Vector Machine (SVM)
     print("SGD Fitting")
@@ -172,7 +172,7 @@ def formattage_date(): # récupére la date d'aujourd'hui et la formatte pour el
     date = annee_mois_jour +"T"+ heure_min_sec
     return date
 
-def post_tweet_elasticsearch(tweet, prediction, json_load):
+def post_tweet_elasticsearch(tweet, prediction, json_load): #envoie les tweets à elasticsearch
     import requests
     url = 'http://localhost:9200/twitter/tweets/'
     data = {'tweet': '%s'%tweet, 'categorie': '%d'%prediction, 'date': '%s'%formattage_date(), 'source': '%s'%json.dumps(json_load)} #.strftime("%Y_%m_%d_%H") }
@@ -601,6 +601,7 @@ else:
                         tweet_nettoye =get_tweets_nettoye_classifie('en', 'text', None, None)
 
             # print("nombre de hashtags aquarius :" + str(compteur_hashtags))
+            #enregistre les tweets en local
             '''fileName = self.fileDirectory + 'Tweets_' + dt.datetime.now().strftime(
                 "%Y_%m_%d_%H") + '.json'  # File name includes date out to hour
             if tweet_quoted_nettoye is not None:
@@ -612,7 +613,7 @@ else:
 
 
         # NB: Because the file name includes the hour, a new file is created automatically every hour.
-
+            #en cas d'erreur enregistre les logs d'erreur en local
             '''def on_error(self, status_code, data):
                 fileName = self.fileDirectory + dt.datetime.now().strftime("%Y_%m_%d_%H") + '_Errors.txt'
                 open(fileName, 'a').write(json.dumps(data))'''
