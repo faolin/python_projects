@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Twitter app</title>
+</head>
+<body>
+<div class="card search-card" id="search_result_container">
+<div>
+    tweet :
+    <p id ="twitter-tweet"> {{(items.tweet)}}</p>
+</div>
+<div>
+    categorie:
+    <p id="categorie"> {{parse_categorie(items.categorie)}} </p>
+</div>    
+</body>
+
+<script>
+    var result_search = { };
+    var vm_result_search = new Vue
+    ({
+        el: '#search_result_container',
+        data: {items: []},
+        methods:
+            {
+                
+                parse_categorie: function(categorie)
+                {
+                    if (categorie == 1)
+                    {
+                        console.log("test")
+                        categorie = 'Câbles sous marins'
+                        return categorie
+                    }
+                    if (categorie == 2)
+                    {
+                        console.log("test")
+                        categorie = 'Energies marines renouvelables'
+                        return categorie
+                    }
+                    if (categorie == 3)
+                    {
+                        console.log("test")
+                        categorie = 'Pêche et environnement marin'
+                        return categorie
+                    }
+                    if (categorie == 4)
+                    {
+                        console.log("test")
+                        categorie = 'Bateaux'
+                        return categorie
+                    }
+                    if (categorie == 5)
+                    {
+                        console.log("test")
+                        categorie = 'Plateformes pétroliéres et pipelines'
+                        return categorie
+                    }
+                }
+            }
+    });
+
+
+    $(document).ready(function(){
+ charger();
+
+function charger(){
+        setTimeout(function(){
+            $.ajax({
+                url: "http://localhost:9200/twitter/_search?source={%22query%22:{%22match_all%22:%20{}},%22size%22:%20%221%22,%22sort%22:%20[{%22date%22:%20{%22order%22:%20%22desc%22}}]}}&source_content_type=application/json",               
+                type: 'GET',
+                dataType: 'json',
+                //data:person,
+                success: function(data,textStatus,xhr){
+                    result_search= data;
+                    vm_result_search.items = data.hits.hits[0]._source;
+                },
+                error: function(xhr,textStatus,errorThrown){
+                    console.log('Error Something');
+                    console.log(errorThrown)
+                    console.log(xhr)
+                },
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("Accept", "*/*");
+                }
+            });
+            charger();
+        }, 2000); // on relance la fonction toutes les 2 secondes 
+}
+    });
+
+
+
+</script>
+
+
+
+
+</html>
+
+
+
+
