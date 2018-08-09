@@ -214,7 +214,7 @@ else:
     class MyStreamer(twy.TwythonStreamer):
         fileDirectory = '/home/francois/Documents/twitter_scrapping/'  # Any result from this class will save to this directory
         stop_time = dt.datetime.now() + dt.timedelta(
-            minutes=10)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
+            minutes=3000)  # Connect to Twitter for x minutes.  Comment out if do not want it timed.
         liste_tweets_interessants = []
         reset_liste_time = dt.datetime.now() + dt.timedelta(hours=48)
         def on_success(self, data):
@@ -626,4 +626,8 @@ else:
 
 
     # Execute
-    streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+    try:
+        streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+    except IOError as ex:
+        print("!!!just caught a error :", ex)
+        time.sleep(70)
