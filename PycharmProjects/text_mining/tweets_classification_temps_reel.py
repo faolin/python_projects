@@ -162,6 +162,7 @@ def tweet_classifier(tweet):
 def formattage_date(): # récupére la date d'aujourd'hui et la formatte pour elasticsearch
     today_date = dt.datetime.today()
     split = str(today_date).split(' ')
+
     annee_mois_jour = split[0]
     heure_min_sec = split[1]
     split_heure_min_sec = heure_min_sec.split(':')
@@ -191,7 +192,7 @@ if action == 'train':
     print ("Time taken: ", time.time() - start, " seconds")
     print ("test",Ytest)
     Matrice_confusion=confusion_matrix(Ytest,y_true)
-    print("matrice_confusion_unigram",Matrice_confusion)
+    print("matrice_confusion_bigram",Matrice_confusion)
     #Matrice_confusion_bigram=confusion_matrix(Ytest,y_true_bigram)
     #print("matrice_confusion_bigram",Matrice_confusion_bigram)
 
