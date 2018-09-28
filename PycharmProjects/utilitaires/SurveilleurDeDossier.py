@@ -1,4 +1,4 @@
-
+'''Surveille les modifications/créations etc... de fichiers dans un dossier'''
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -38,6 +38,14 @@ class Handler(FileSystemEventHandler):
         elif event.event_type == 'modified':
             # Taken any action here when a file is modified.
             print ("Received modified event - %s." % event.src_path)
+
+        elif event.event_type == 'deleted':
+            # Taken any action here when a file is modified.
+            print ("Received deleted event - %s." % event.src_path)
+
+        elif event.event_type == 'moved':
+            # Taken any action here when a file is modified.
+            print ("Received moved event - %s." % event.src_path)
 
 
 if __name__ == '__main__':
