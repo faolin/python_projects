@@ -2,6 +2,8 @@
 ''' récupere en temps réel des tweets avec des mots clés, les nettoie , les classifie selon leur catégorie (Cable sous marin, oil&gas ,Energie marine renouvelable, Fishing
  Shipping grâce a un modéle SVM entrainé sur une base annotée manuellement. Affiche les tweets intéréssant appartenenant a une des catégories et les enregistre pour les archiver'''
 # Import libraries
+import sys
+
 import twython as twy
 import json
 import datetime as dt
@@ -233,6 +235,7 @@ else:
             json_load = json.loads(tweet)
             # séléction du texte des tweets
             compteur_hashtags = 0
+
 
 
             # toutes les fonctions de nettoyage du tweet
@@ -627,8 +630,10 @@ else:
 
 
     # Execute
-    try:
-        streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
-    except IOError as ex:
-        print("!!!just caught a error :", ex)
-        time.sleep(70)
+    while True:
+        try:
+            streamConnect(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+        except (IOError, ConnectionError) as ex:
+            print("!!!just caught a error :", ex)
+            time.sleep(70)
+            continue
