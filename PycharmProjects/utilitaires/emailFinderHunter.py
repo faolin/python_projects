@@ -2,27 +2,45 @@ import pandas as pd
 from pyhunter import PyHunter
 import json
 import glob
-'''filename = "/home/francois/Téléchargements/vessleswindfarm.csv"
+'''filename = "/home/francois/Téléchargements/londesBDD.csv"
 df = pd.read_csv(filename)
-df['email'] = None'''
+df['email'] = None
+df['score'] = None'''
+
+# récupére avec l'api clearbit le nom de domaine d'une company grâce a son nom
+def getDomainNameFromCompany(companyName):
+    import clearbit
+    print(companyName)
+    clearbit.key = 'sk_0e4340af79be6aba0a6940ded703eb04'
+    response = clearbit.NameToDomain.find(name=companyName)
+    # si l'on ne trouve pas de nom de domain l'on retourne none
+    try:
+        return response['domain']
+    except TypeError:
+        return None
+
+'''for i in range(len(df['company'])):
+    domain_search(getDomainNameFromCompany(df['company'][i]), False)'''
 
 def email_finder(company, name):
+    if company is not None :
+        '''You can also use the company name and the full name instead, along with raw to get the full response:'''
+        hunter = PyHunter('a890302fd13f718af83604989dbd3213772a0d07')
+        json_load = json.loads(hunter.email_finder(company= company, full_name= name, raw = True).text)
+        email = json_load['data']['email']
+        score = json_load['data']['score']
+        return email, score
+    else:
+        return None, None
 
-    '''You can also use the company name and the full name instead, along with raw to get the full response:'''
-    hunter = PyHunter('a890302fd13f718af83604989dbd3213772a0d07')
-    json_load = json.loads(hunter.email_finder(company= company, full_name= name, raw = True).text)
-    email = json_load['data']['email']
-    score = json_load['data']['score']
-    return email, score
-'''
-for i in range(len(df['name'])):
-    email, score = email_finder(df['company'][i], df['name'][i])
+'''for i in range(len(df['name'])):
+    email, score = email_finder(getDomainNameFromCompany(df['company'][i]), df['name'][i])
     print(email, score)
     df['email'][i] = email
     df['score'][i] = score
 
-df.to_csv('/home/francois/Téléchargements/resultHunterEmailFinder.csv')
-'''
+df.to_csv('/home/francois/Téléchargements/resultHunterEmailFinder.csv')'''
+
 '''permet a partir d'un nom de domaine d'une entreprise d'en ressortir des fichiers csv avec les employées de 
 l'entreprise ( si qualified est true, l'on ne garde que les employés a qui l'on a trouvé le nom'''
 def domain_search(company, qualified):
@@ -65,7 +83,7 @@ def domain_search(company, qualified):
                               })
         if emails != []:
             if qualified is False:
-                companies.to_csv('/home/francois/Téléchargements/allcompanies_windFarmVessel/' + company + '.csv')
+                companies.to_csv('/home/francois/Téléchargements/allCompanies/' + company + '.csv')
             if qualified is True:
                 companies.to_csv('/home/francois/Téléchargements/allcompanies_windFarmVessel_qualified/' + company + '.csv')
             if qualified is 'ultra':
@@ -83,26 +101,6 @@ def splitCompanyName(CompanyName):
         replace = CompanyName.replace('/', '-')
         return replace
 
-
-
-
-
-
-# récupére avec l'api clearbit le nom de domaine d'une company grâce a son nom
-def getDomainNameFromCompany(companyName):
-    import clearbit
-    import json
-    print(companyName)
-    clearbit.key = 'sk_0e4340af79be6aba0a6940ded703eb04'
-    response = clearbit.NameToDomain.find(name=companyName)
-    # si l'on ne trouve pas de nom de domain l'on retourne none
-    try:
-        return response['domain']
-    except TypeError:
-        return None
-'''
-for i in range(len(df['company'])):
-    domain_search(getDomainNameFromCompany(df['company'][i]), 'ultra')'''
 
 # extrait le nom de domaine d'une url
 def getDomainNameFromUrl(url):
@@ -126,7 +124,7 @@ def countEmailInDirectory(path):
                 allEmail.append(df['emails'])
     return len(allEmail)
 
-print(countEmailInDirectory("/home/francois/Téléchargements/all_companies/allcompanies_windFarmVessel/*.csv"))
+#print(countEmailInDirectory("/home/francois/Téléchargements/all_companies/allcompanies_windFarmVessel/*.csv"))
 
 '''récupére dans un dossier avec plusieurs fichiers 30 adresse mail au hasard'''
 def getRandomEmail(pathTodirectory, NumberOfEmailToget):
@@ -142,3 +140,15 @@ def getRandomEmail(pathTodirectory, NumberOfEmailToget):
     emails = pd.DataFrame({'emails': allEmail})
     emails.to_csv('/home/francois/Téléchargements/emailsTest.csv')
 #getRandomEmail("/home/francois/Téléchargements/allCompanies/*.csv", 30)
+
+'''vérifier l'authencitité d'un email'''
+def emailVerifier(email):
+    hunter = PyHunter('a890302fd13f718af83604989dbd3213772a0d07')
+    statut = hunter.email_verifier(email)['result']
+    print(statut)
+    if statut == 'undeliverable':
+        return False
+    else:
+        return True
+if __name__ == '__main__':
+    print('start')
