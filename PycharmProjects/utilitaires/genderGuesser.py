@@ -16,5 +16,4 @@ if __name__ == '__main__':
     df1['gendertest'] = None
     for i in range(len(df1['first_name'])):
         df1['gender'][i] = getGender(df1['first_name'][i])
-
     df1.to_csv('/home/francois/Téléchargements/testgender.csv', index = False)
